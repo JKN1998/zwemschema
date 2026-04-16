@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zwemschema — 32 weken</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --color-background-primary: #ffffff;
+    --color-background-secondary: #f5f5f0;
+    --color-text-primary: #1a1a1a;
+    --color-text-secondary: #6b6b6b;
+    --color-border-tertiary: rgba(0,0,0,0.12);
+    --border-radius-md: 8px;
+    --border-radius-lg: 12px;
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-background-primary: #1a1a1a;
+      --color-background-secondary: #252525;
+      --color-text-primary: #e8e8e8;
+      --color-text-secondary: #999999;
+      --color-border-tertiary: rgba(255,255,255,0.12);
+    }
+  }
+  body {
+    font-family: var(--font-sans);
+    background: var(--color-background-secondary);
+    color: var(--color-text-primary);
+    line-height: 1.5;
+    padding: 20px;
+  }
+  button { font-family: inherit; }
+  input[type="checkbox"] { cursor: pointer; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+const BLOCK_COLORS = {
+  1: { bg: "#E1F5EE", accent: "#0F6E56", light: "#9FE1CB", dark: "#04342C" },
+  2: { bg: "#E6F1FB", accent: "#185FA5", light: "#85B7EB", dark: "#042C53" },
+  3: { bg: "#EEEDFE", accent: "#534AB7", light: "#AFA9EC", dark: "#26215C" },
+  4: { bg: "#FAEEDA", accent: "#854F0B", light: "#FAC775", dark: "#412402" },
+  5: { bg: "#FAECE7", accent: "#993C1D", light: "#F0997B", dark: "#4A1B0C" },
+};
+
+const START_DATE = new Date(2026, 3, 13);
+
+function getWeekDate(weekNum) {
+  const d = new Date(START_DATE);
+  d.setDate(d.getDate() + (weekNum - 1) * 7);
+  const months = ["jan","feb","mrt","apr","mei","jun","jul","aug","sep","okt","nov","dec"];
+  return d.getDate() + " " + months[d.getMonth()] + " " + d.getFullYear();
+}
+
+function getBlockNum(week) {
+  if (week <= 6) return 1;
+  if (week <= 12) return 2;
+  if (week <= 18) return 3;
+  if (week <= 24) return 4;
+  return 5;
+}
+
+function buildWeeks() {
+  const weeks = [];
+
+  const b1a = (main, fast, mainN, fastN, note) => ({
+    warmup: "300 easy", drill: "4\u00d750 drill-swim (25m drill / 25m normaal) \u2014 r15\"",
+    main: main + " \u2014 r15\"", fast: fast + " \u2014 r20\"", cooldown: "200 pull + 100 easy",
+    total: 300 + 200 + mainN + fastN + 200 + 100, note,
+  });
+  const b1b = (tempo, steady, tempoN, steadyN, note) => ({
+    warmup: "300 easy", drill: "4\u00d750 build (rustig\u2192vlot) \u2014 r15\"",
+    main: tempo + " \u2014 r20\"", secondary: steady + " \u2014 r15\"",
+    fast: "4\u00d750 fast \u2014 r20\"", cooldown: "200 easy",
+    total: 300 + 200 + tempoN + steadyN + 200 + 200, note,
+  });
+
+  weeks.push({ week:1, a: b1a("6\u00d7100 steady","4\u00d750 fast",600,200,null), b: b1b("8\u00d750 tempo","4\u00d7100 steady",400,400,null) });
+  weeks.push({ week:2, a: b1a("7\u00d7100 steady","4\u00d750 fast",700,200,"6\u00d7100 \u2192 7\u00d7100"), b: b1b("10\u00d750 tempo","4\u00d7100 steady",500,400,"8\u00d750 \u2192 10\u00d750") });
+  weeks.push({ week:3, a: b1a("8\u00d7100 steady","4\u00d750 fast",800,200,"7\u00d7100 \u2192 8\u00d7100"), b: b1b("12\u00d750 tempo","4\u00d7100 steady",600,400,"10\u00d750 \u2192 12\u00d750") });
+  weeks.push({ week:4, a: b1a("6\u00d7100 steady \u26a1 strakker tempo","4\u00d750 fast",600,200,"Terug naar 6\u00d7100, harder tempo"), b: b1b("8\u00d750 tempo \u26a1 iets harder","4\u00d7100 steady",400,400,"Terug naar 8\u00d750, harder") });
+  weeks.push({ week:5, a: b1a("6\u00d7100 steady","6\u00d750 fast",600,300,"4\u00d750 fast \u2192 6\u00d750 fast"), b: b1b("8\u00d750 tempo","5\u00d7100 steady",400,500,"4\u00d7100 \u2192 5\u00d7100") });
+  weeks.push({ week:6, a: b1a("8\u00d7100 steady","4\u00d750 fast",800,200,"6\u00d7100 \u2192 8\u00d7100"), b: b1b("10\u00d750 tempo","5\u00d7100 steady",500,500,"10\u00d750 + 5\u00d7100") });
+
+  const b2a = (main, fast, mainN, fastN, note) => ({
+    warmup: "300 easy", drill: "4\u00d750 drill-swim (25m drill / 25m normaal) \u2014 r15\"",
+    main: main + " \u2014 r20\"", fast: fast + " \u2014 r20\"", cooldown: "200 easy",
+    total: 300 + 200 + mainN + fastN + 200, note,
+  });
+  const b2b = (tempo, recov, steady, tempoN, recovN, steadyN, note) => ({
+    warmup: "400 easy", drill: "4\u00d750 build \u2014 r15\"",
+    main: tempo + " \u2014 r20\"", recovery: recov ? recov + " \u2014 r15\"" : null,
+    secondary: steady + " \u2014 r15\"", cooldown: "200 easy",
+    total: 400 + 200 + tempoN + (recovN||0) + steadyN + 200, note,
+  });
+
+  weeks.push({ week:7, a: b2a("5\u00d7200 steady","4\u00d750 vlot",1000,200,null), b: b2b("8\u00d7100 tempo","4\u00d750 easy","4\u00d7100 steady",800,200,400,null) });
+  weeks.push({ week:8, a: b2a("6\u00d7200 steady","4\u00d750 vlot",1200,200,"5\u00d7200 \u2192 6\u00d7200"), b: b2b("9\u00d7100 tempo","4\u00d750 easy","4\u00d7100 steady",900,200,400,"8\u00d7100 \u2192 9\u00d7100") });
+  weeks.push({ week:9, a: b2a("5\u00d7200 steady","6\u00d750 vlot",1000,300,"4\u00d750 \u2192 6\u00d750 vlot"), b: b2b("10\u00d7100 tempo","4\u00d750 easy","4\u00d7100 steady",1000,200,400,"9\u00d7100 \u2192 10\u00d7100") });
+  weeks.push({ week:10, a: b2a("5\u00d7200 steady \u26a1 sneller","4\u00d750 vlot",1000,200,"Zelfde volume, sneller tempo"), b: b2b("8\u00d7100 tempo \u26a1 strakker","4\u00d750 easy","4\u00d7100 steady",800,200,400,"Terug naar 8\u00d7100, harder") });
+  weeks.push({ week:11, a: b2a("6\u00d7200 steady","4\u00d750 vlot",1200,200,"5\u00d7200 \u2192 6\u00d7200"), b: b2b("10\u00d7100 tempo","4\u00d750 easy","4\u00d7100 steady",1000,200,400,"10\u00d7100 tempo") });
+  weeks.push({ week:12, a: b2a("4\u00d7200 steady + 4\u00d7100 sneller","4\u00d750 vlot",1200,200,"Mix: 4\u00d7200 + 4\u00d7100"), b: b2b("6\u00d7100 tempo","4\u00d750 easy","4\u00d7100 steady + 4\u00d750 fast",600,200,600,"6\u00d7100 + 4\u00d7100 + 4\u00d750 fast") });
+
+  const b3a = (main, fast, mainN, fastN, note) => ({
+    warmup: "400 easy", drill: "4\u00d750 drill-swim (25m drill / 25m normaal) \u2014 r15\"",
+    main: main + " \u2014 r25\"", fast: fast + " \u2014 r20\"", cooldown: "200 easy",
+    total: 400 + 200 + mainN + fastN + 200, note,
+  });
+  const b3b = (tempo, tempoSteady, fast, tempoN, tsN, fastN, note) => ({
+    warmup: "400 easy", drill: "4\u00d750 build \u2014 r15\"",
+    main: tempo + " \u2014 r20\"", secondary: tempoSteady !== "-" ? tempoSteady + " \u2014 r20\"" : null,
+    fast: fast !== "-" ? fast + " \u2014 r20\"" : null, cooldown: "200 easy",
+    total: 400 + 200 + tempoN + tsN + fastN + 200, note,
+  });
+
+  weeks.push({ week:13, a: b3a("4\u00d7300 steady","4\u00d750 fast",1200,200,null), b: b3b("6\u00d7100 tempo","4\u00d7200 tempo-steady","4\u00d750 fast",600,800,200,null) });
+  weeks.push({ week:14, a: b3a("5\u00d7300 steady","4\u00d750 fast",1500,200,"4\u00d7300 \u2192 5\u00d7300"), b: b3b("8\u00d7100 tempo","4\u00d7200 tempo-steady","4\u00d750 fast",800,800,200,"6\u00d7100 \u2192 8\u00d7100") });
+  weeks.push({ week:15, a: b3a("4\u00d7300 steady \u26a1 sneller","4\u00d750 fast",1200,200,"Zelfde volume, harder tempo"), b: b3b("6\u00d7100 tempo","5\u00d7200 tempo-steady","4\u00d750 fast",600,1000,200,"4\u00d7200 \u2192 5\u00d7200") });
+  weeks.push({ week:16, a: b3a("3\u00d7400 steady","4\u00d750 fast",1200,200,"300's \u2192 400's"), b: b3b("8\u00d7100 tempo","4\u00d7200 tempo-steady","4\u00d750 fast",800,800,200,"8\u00d7100 + 4\u00d7200") });
+  weeks.push({ week:17, a: b3a("4\u00d7300 steady","4\u00d750 fast",1200,200,"4\u00d7300 + 4\u00d750 fast"), b: b3b("6\u00d7100 tempo \u26a1 harder","4\u00d7200 steady","4\u00d750 fast",600,800,200,"6\u00d7100 harder + 4\u00d7200") });
+  weeks.push({ week:18, a: b3a("5\u00d7300 steady","4\u00d750 fast",1500,200,"4\u00d7300 \u2192 5\u00d7300"), b: b3b("10\u00d7100 tempo","-","-",1000,0,0,"Focus: 10\u00d7100 tempo") });
+
+  const b4a = (main, secondary, mainN, secN, note) => ({
+    warmup: "400 easy", drill: "4\u00d750 drill-swim (25m drill / 25m normaal) \u2014 r15\"",
+    main: main + " \u2014 r30\"", secondary: secondary ? secondary + " \u2014 r15\"" : null,
+    cooldown: "200 easy", total: 400 + 200 + mainN + secN + 200, note,
+  });
+  const b4b = (tempo, steady, fast, tempoN, steadyN, fastN, note) => ({
+    warmup: "400 easy", drill: "4\u00d750 build \u2014 r15\"",
+    main: tempo + " \u2014 r20\"", secondary: steady !== "-" ? steady + " \u2014 r15\"" : null,
+    fast: fast + " \u2014 r20\"", cooldown: "300 easy",
+    total: 400 + 200 + tempoN + steadyN + fastN + 300, note,
+  });
+
+  weeks.push({ week:19, a: b4a("3\u00d7500 steady","4\u00d7100 steady",1500,400,null), b: b4b("5\u00d7200 tempo","5\u00d7100 steady","6\u00d750 fast",1000,500,300,null) });
+  weeks.push({ week:20, a: b4a("2\u00d7600 + 1\u00d7400 steady","4\u00d7100 steady",1600,400,"3\u00d7500 \u2192 2\u00d7600+1\u00d7400"), b: b4b("6\u00d7200 tempo","5\u00d7100 steady","6\u00d750 fast",1200,500,300,"5\u00d7200 \u2192 6\u00d7200") });
+  weeks.push({ week:21, a: b4a("3\u00d7500 steady \u26a1 sneller","4\u00d7100 steady",1500,400,"Zelfde, harder tempo"), b: b4b("5\u00d7200 tempo","6\u00d7100 steady","6\u00d750 fast",1000,600,300,"5\u00d7100 \u2192 6\u00d7100") });
+  weeks.push({ week:22, a: b4a("2\u00d7700 steady","4\u00d7100 steady",1400,400,"500's \u2192 700's"), b: b4b("6\u00d7200 tempo","5\u00d7100 steady","6\u00d750 fast",1200,500,300,"6\u00d7200 tempo") });
+  weeks.push({ week:23, a: b4a("3\u00d7500 steady","4\u00d7100 steady",1500,400,"3\u00d7500 + 4\u00d7100"), b: b4b("4\u00d7200 + 8\u00d7100 tempo-steady","-","6\u00d750 fast",1600,0,300,"Mix: 4\u00d7200 + 8\u00d7100") });
+  weeks.push({ week:24, a: b4a("2\u00d7800 steady","4\u00d7100 steady",1600,400,"500\u2192800: langste reps"), b: b4b("5\u00d7200 tempo","5\u00d7100 steady","6\u00d750 fast",1000,500,300,"5\u00d7200 + 6\u00d750 fast") });
+
+  const b5a = (main, secondary, mainN, secN, note) => ({
+    warmup: "400 easy", drill: "4\u00d750 drill-swim (25m drill / 25m normaal) \u2014 r15\"",
+    main: main + " \u2014 r30\"", secondary: secondary !== "\u2013" ? secondary + " \u2014 r20\"" : null,
+    cooldown: "200 easy", total: 400 + 200 + mainN + secN + 200, note,
+  });
+  const b5b = (tempo, steady, fast, tempoN, steadyN, fastN, note) => ({
+    warmup: "400 easy", drill: "4\u00d750 build \u2014 r15\"",
+    main: tempo + " \u2014 r20\"", secondary: steady + " \u2014 r25\"",
+    fast: fast !== "\u2013" ? fast + " \u2014 r20\"" : null, cooldown: "300 easy",
+    total: 400 + 200 + tempoN + steadyN + fastN + 300, note,
+  });
+
+  weeks.push({ week:25, a: b5a("2\u00d71000 steady","4\u00d7200 steady",2000,800,null), b: b5b("8\u00d7100 tempo","4\u00d7300 steady-tempo","4\u00d750 fast",800,1200,200,null) });
+  weeks.push({ week:26, a: b5a("1\u00d71200 + 1\u00d7800 steady","4\u00d7200 steady",2000,800,"2\u00d71000 \u2192 1200+800"), b: b5b("10\u00d7100 tempo","4\u00d7300 steady-tempo","4\u00d750 fast",1000,1200,200,"8\u00d7100 \u2192 10\u00d7100") });
+  weeks.push({ week:27, a: b5a("2\u00d71000 steady \u26a1 sneller","4\u00d7200 steady",2000,800,"Zelfde, harder tempo"), b: b5b("8\u00d7100 tempo","5\u00d7300 steady-tempo","4\u00d750 fast",800,1500,200,"4\u00d7300 \u2192 5\u00d7300") });
+  weeks.push({ week:28, a: b5a("1\u00d71500 + 1\u00d7800 steady","4\u00d7200 steady",2300,800,"Langste rep: 1500m!"), b: b5b("10\u00d7100 tempo","4\u00d7300 steady-tempo","4\u00d750 fast",1000,1200,200,"10\u00d7100 tempo") });
+  weeks.push({ week:29, a: b5a("2\u00d71200 steady","4\u00d7200 steady",2400,800,"1000\u21921200"), b: b5b("6\u00d7100 tempo","4\u00d7400 steady-tempo","4\u00d750 fast",600,1600,200,"300\u2192400 steady-tempo") });
+  weeks.push({ week:30, a: b5a("1\u00d72000 steady + 4\u00d7100","\u2013",2400,0,"Eerste 2000m aaneengesloten!"), b: b5b("12\u00d7100 tempo","4\u00d7300 steady-tempo","4\u00d750 fast",1200,1200,200,"12\u00d7100 tempo") });
+  weeks.push({ week:31, a: b5a("1\u00d71500 + 1\u00d71000 steady","4\u00d7200 steady",2500,800,"1500+1000"), b: b5b("8\u00d7100 tempo","5\u00d7300 steady-tempo","4\u00d750 fast",800,1500,200,"8\u00d7100 + 5\u00d7300") });
+  weeks.push({ week:32, a: b5a("1\u00d73000 steady test of 2\u00d71500","\u2013",3000,0,"EINDTEST: 3000m of 2\u00d71500"), b: b5b("6\u00d7100 tempo (lichter)","4\u00d7300 steady","\u2013",600,1200,0,"Lichter als je test doet") });
+
+  return weeks;
+}
+
+const WEEKS = buildWeeks();
+const BLOCK_NAMES = { 1:"Ritme & basis", 2:"Volume & 200's", 3:"Threshold", 4:"Race-specifiek", 5:"4km capaciteit" };
+const BLOCK_GOALS = {
+  1: "Ritme terugvinden, techniek onder controle, conditiebasis leggen. Van \u00b11200m naar \u00b11800\u20132000m.",
+  2: "Langere herhalingen, meer steady volume, eerste 200's. Richting 2000\u20132300m.",
+  3: "Threshold ontwikkelen, 200\u2013300m herhalingen, duidelijk sneller. Richting 2300\u20132800m.",
+  4: "Race-specifiek duurvermogen, grotere hoofdsets, stevig tempo. Richting 2800\u20133400m.",
+  5: "4km-specifieke capaciteit, lange aaneengesloten blokken. Richting 3200\u20134200m.",
+};
+
+function TrainingCard({ label, training, color, checked, onCheck }) {
+  const parts = [];
+  if (training.warmup) parts.push({ label: "Warmup", text: training.warmup });
+  if (training.drill) parts.push({ label: "Drill/Build", text: training.drill });
+  if (training.main) parts.push({ label: "Hoofdset", text: training.main, highlight: true });
+  if (training.recovery) parts.push({ label: "Herstel", text: training.recovery });
+  if (training.secondary) parts.push({ label: "Tweede set", text: training.secondary, highlight: true });
+  if (training.fast) parts.push({ label: "Fast", text: training.fast });
+  if (training.cooldown) parts.push({ label: "Cooldown", text: training.cooldown });
+
+  return (
+    <div style={{
+      flex: "1 1 320px", border: "1px solid " + (checked ? color.accent+"44" : "rgba(0,0,0,0.1)"),
+      borderRadius: 12, padding: 16,
+      background: checked ? color.bg+"66" : "var(--color-background-primary)",
+      opacity: checked ? 0.7 : 1, transition: "all 0.2s",
+    }}>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
+        <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+          <span style={{ display:"inline-block", padding:"2px 10px", borderRadius:8, background:color.bg, color:color.accent, fontSize:12, fontWeight:500 }}>{label}</span>
+          <span style={{ fontSize:13, color:"var(--color-text-secondary)" }}>{training.total}m</span>
+        </div>
+        <label style={{ display:"flex", alignItems:"center", gap:6, cursor:"pointer", fontSize:13, color:"var(--color-text-secondary)" }}>
+          <input type="checkbox" checked={checked} onChange={onCheck} style={{ width:18, height:18, accentColor:color.accent }} />
+          klaar
+        </label>
+      </div>
+      {training.note && (
+        <div style={{ fontSize:12, color:color.accent, background:color.bg, padding:"6px 10px", borderRadius:8, marginBottom:10, fontWeight:500 }}>
+          Wijziging: {training.note}
+        </div>
+      )}
+      <div style={{ display:"flex", flexDirection:"column", gap:4 }}>
+        {parts.map((p, i) => (
+          <div key={i} style={{ display:"flex", gap:8, fontSize:13, lineHeight:1.6, padding:"3px 0",
+            borderLeft: p.highlight ? "3px solid "+color.accent : "3px solid transparent", paddingLeft:8 }}>
+            <span style={{ minWidth:70, color:"var(--color-text-secondary)", fontSize:11, textTransform:"uppercase", letterSpacing:"0.03em", paddingTop:2 }}>{p.label}</span>
+            <span style={{ color:"var(--color-text-primary)", fontWeight: p.highlight ? 500 : 400,
+              textDecoration: checked ? "line-through" : "none" }}>{p.text}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function WeekRow({ weekData, color, blockNum, checks, setChecks }) {
+  const wk = weekData.week;
+  const isNewBlock = [1,7,13,19,25].includes(wk);
+  const isTest = wk === 1 || (wk > 1 && (wk - 1) % 4 === 0);
+
+  return (
+    <div style={{ marginBottom: isNewBlock ? 0 : 16 }}>
+      {isNewBlock && (
+        <div style={{ background:color.bg, border:"1px solid "+color.accent+"33", borderRadius:12, padding:"16px 20px", marginBottom:16, marginTop: wk===1?0:32 }}>
+          <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:4 }}>
+            <span style={{ fontSize:11, fontWeight:500, textTransform:"uppercase", letterSpacing:"0.08em", color:color.accent, background:color.accent+"18", padding:"2px 8px", borderRadius:8 }}>Blok {blockNum}</span>
+            <span style={{ fontWeight:500, fontSize:16, color:color.dark }}>{BLOCK_NAMES[blockNum]}</span>
+          </div>
+          <div style={{ fontSize:13, color:color.accent, lineHeight:1.5 }}>{BLOCK_GOALS[blockNum]}</div>
+        </div>
+      )}
+      <div style={{ background:"var(--color-background-primary)", border:"1px solid var(--color-border-tertiary)", borderRadius:12, padding:"16px 20px", marginBottom:4 }}>
+        <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:14, flexWrap:"wrap" }}>
+          <span style={{ fontWeight:500, fontSize:15, minWidth:60 }}>Week {wk}</span>
+          <span style={{ fontSize:13, color:"var(--color-text-secondary)", background:"var(--color-background-secondary)", padding:"2px 10px", borderRadius:8 }}>{getWeekDate(wk)}</span>
+          {isTest && <span style={{ fontSize:11, fontWeight:500, color:"#993C1D", background:"#FAECE7", padding:"2px 10px", borderRadius:8 }}>T{Math.floor((wk-1)/4)} test</span>}
+          <span style={{ fontSize:12, color:"var(--color-text-secondary)", marginLeft:"auto" }}>Totaal: {weekData.a.total + weekData.b.total}m</span>
+        </div>
+        <div style={{ display:"flex", gap:12, flexWrap:"wrap" }}>
+          <TrainingCard label="Training A" training={weekData.a} color={color}
+            checked={checks[wk+"a"]||false} onCheck={()=>setChecks(p=>({...p,[wk+"a"]:!p[wk+"a"]}))} />
+          <TrainingCard label="Training B" training={weekData.b} color={color}
+            checked={checks[wk+"b"]||false} onCheck={()=>setChecks(p=>({...p,[wk+"b"]:!p[wk+"b"]}))} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  const [checks, setChecks] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("swim-checks")) || {}; } catch { return {}; }
+  });
+  const [filter, setFilter] = useState(0);
+
+  useEffect(() => {
+    try { localStorage.setItem("swim-checks", JSON.stringify(checks)); } catch {}
+  }, [checks]);
+
+  const totalDone = Object.values(checks).filter(Boolean).length;
+  const totalSessions = WEEKS.length * 2;
+  const filtered = filter === 0 ? WEEKS : WEEKS.filter(w => getBlockNum(w.week) === filter);
+
+  return (
+    <div style={{ maxWidth:820, margin:"0 auto" }}>
+      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:8, flexWrap:"wrap", gap:8 }}>
+        <div>
+          <h1 style={{ fontSize:22, fontWeight:500 }}>Zwemschema</h1>
+          <p style={{ fontSize:13, color:"var(--color-text-secondary)", marginTop:4 }}>32 weken — 13 apr 2026 t/m 22 nov 2026</p>
+        </div>
+        <div style={{ background:"var(--color-background-secondary)", borderRadius:8, padding:"8px 14px", fontSize:13, color:"var(--color-text-secondary)" }}>
+          {totalDone}/{totalSessions} trainingen
+          <div style={{ height:4, background:"var(--color-border-tertiary)", borderRadius:2, marginTop:6, overflow:"hidden" }}>
+            <div style={{ width:(totalDone/totalSessions*100)+"%", height:"100%", background:"#0F6E56", borderRadius:2, transition:"width 0.3s" }} />
+          </div>
+        </div>
+      </div>
+      <div style={{ display:"flex", gap:6, marginBottom:20, marginTop:12, flexWrap:"wrap" }}>
+        {[{n:0,label:"Alle weken"},{n:1,label:"Blok 1"},{n:2,label:"Blok 2"},{n:3,label:"Blok 3"},{n:4,label:"Blok 4"},{n:5,label:"Blok 5"}].map(({n,label}) => (
+          <button key={n} onClick={()=>setFilter(n)} style={{
+            padding:"6px 14px", borderRadius:8, cursor:"pointer", fontSize:12, fontWeight:500,
+            border: filter===n ? "1.5px solid "+(n===0?"var(--color-text-primary)":BLOCK_COLORS[n].accent) : "1px solid var(--color-border-tertiary)",
+            background: filter===n ? (n===0?"var(--color-text-primary)":BLOCK_COLORS[n].bg) : "transparent",
+            color: filter===n ? (n===0?"var(--color-background-primary)":BLOCK_COLORS[n].accent) : "var(--color-text-secondary)",
+          }}>{label}</button>
+        ))}
+      </div>
+      {filtered.map(w => (
+        <WeekRow key={w.week} weekData={w} color={BLOCK_COLORS[getBlockNum(w.week)]} blockNum={getBlockNum(w.week)} checks={checks} setChecks={setChecks} />
+      ))}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
